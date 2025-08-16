@@ -3,150 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>סורק מק״ט + חיפוש רנואר</title>
+  <title>סורק מק״ט + חיפוש רנואר (Lite)</title>
   <style>
-    :root{--blue:#007bff;--blue-dark:#0056b3;--text:#222;--muted:#666;--bg:#f7f7f8;--card:#fff;--radius:14px}
-    *{box-sizing:border-box}html,body{margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial;background:var(--bg);color:var(--text);line-height:1.5}
-    header{background:linear-gradient(90deg,var(--blue),var(--blue-dark));padding:16px 20px;text-align:center;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18)}
-    header img{height:36px;vertical-align:middle}
-    header h1{margin:8px 0 0;font-size:clamp(18px,2.6vw,26px)}
-    .wrap{max-width:980px;margin:18px auto;padding:12px}
-    .card{background:var(--card);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.08);padding:clamp(14px,3vw,24px)}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
-    input[type=text]{flex:1;min-width:220px;padding:12px;border:1px solid #dcdcdc;border-radius:10px;font-size:16px;outline:0;box-shadow:inset 0 2px 4px rgba(0,0,0,.03)}
-    input[type=text]:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,123,255,.12), inset 0 2px 4px rgba(0,0,0,.03)}
-    button{background:var(--blue);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 6px 16px rgba(0,123,255,.35);transition:background .2s,transform .05s}
-    button:hover{background:var(--blue-dark)}button:active{transform:translateY(1px)}
-    .btn-ghost{background:#fff;color:var(--blue);border:1px solid #dcdcdc;box-shadow:none}
+    :root{--blue:#007bff;--blue2:#0056b3;--text:#222;--muted:#666;--bg:#f7f7f8;--card:#fff}
+    *{box-sizing:border-box}html,body{margin:0;padding:0} body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+    header{background:linear-gradient(90deg,var(--blue),var(--blue2));color:#fff;text-align:center;padding:14px 16px}
+    header h1{margin:6px 0 0;font-size:20px}
+    .wrap{max-width:900px;margin:16px auto;padding:12px}
+    .card{background:var(--card);border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,.08);padding:16px;margin-bottom:12px}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    input{flex:1;min-width:220px;padding:12px;border:1px solid #dcdcdc;border-radius:10px;font-size:16px}
+    button{background:var(--blue);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-size:16px;cursor:pointer}
+    button:hover{background:var(--blue2)} .ghost{background:#fff;color:var(--blue);border:1px solid #dcdcdc}
     .muted{color:var(--muted);font-size:14px;margin-top:6px}
-    .grid{display:grid;gap:14px}@media(min-width:760px){.grid{grid-template-columns:1fr 1fr}}
-    iframe{width:100%;height:65vh;border:1px solid #e6e6e6;border-radius:10px;background:#fff}
-    .ok{color:#118a2c;font-weight:700;margin-top:8px}
-    .err{color:#c0392b;font-weight:700;margin-top:8px}
-    /* modal */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
-    .modal .box{background:#000;color:#fff;border-radius:12px;width:min(680px,100%);padding:10px;position:relative}
-    .close{position:absolute;top:10px;inset-inline-end:10px;background:#fff;color:#000;border:0;border-radius:8px;padding:8px 12px}
-    video{width:100%;height:auto;border-radius:10px;background:#000}
+    .ok{color:#118a2c;font-weight:700;margin-top:6px} .err{color:#c0392b;font-weight:700;margin-top:6px}
+    iframe{width:100%;height:60vh;border:1px solid #eee;border-radius:10px;background:#fff;margin-top:8px;display:none}
   </style>
 </head>
 <body>
-  <header>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/69/Renuar_logo.png" alt="Renuar">
-    <h1>סורק מק״ט + חיפוש באתר רנואר</h1>
-  </header>
+  <header><h1>סורק מק״ט + חיפוש באתר רנואר</h1></header>
 
   <main class="wrap">
     <section class="card">
       <div class="row">
-        <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="הכנס או סרוק מק״ט">
-        <button id="checkBtn" type="button">בדוק מחיר</button>
-        <button id="searchBtn" type="button" class="btn-ghost">חפש ברנואר</button>
-        <button id="openBtn"   type="button" class="btn-ghost">פתח בטאב חדש</button>
-        <button id="scanBtn"  type="button">סרוק עם מצלמה</button>
-        <button id="clearBtn" type="button" class="btn-ghost">נקה</button>
+        <input id="code" type="text" inputmode="numeric" placeholder="הכנס או סרוק מק״ט">
+        <button onclick="checkPrice()">בדוק מחיר</button>
+        <button class="ghost" onclick="searchRenuar()">חפש ברנואר</button>
+        <button class="ghost" onclick="openNew()">פתח בטאב חדש</button>
+        <button class="ghost" onclick="clearAll()">נקה</button>
       </div>
-      <div id="msg" class="muted">טיפ: לחיצה على Enter تفحص السعر وتبحث.</div>
+      <div id="msg" class="muted">טיפ: Enter يفحص ويبحث.</div>
+      <div id="priceRes"></div>
     </section>
 
-    <section class="grid">
-      <div class="card">
-        <strong>תוצאות באתר רנואר (במסגרת):</strong>
-        <iframe id="renFrame" title="תוצאות חיפוש רנואר" style="display:none;margin-top:10px;"></iframe>
-        <div class="muted">إذا ما ظهر داخل الإطار، استعمل "פתח בטאב חדש".</div>
-      </div>
-      <div class="card">
-        <strong>טבלת מחירים לדוגמה:</strong>
-        <pre class="muted" style="white-space:pre-wrap;margin-top:8px">111 → ₪50
-222 → ₪75
-333 → ₪120
-444 → ₪200</pre>
-        <div id="priceRes"></div>
-      </div>
+    <section class="card">
+      <strong>תוצאות באתר רנואר (במסגרת):</strong>
+      <iframe id="frame" title="תוצאות חיפוש רנואר"></iframe>
+      <div class="muted">إذا لم يظهر داخل الإطار بسبب سياسات الموقع، استخدم "פתח בטאב חדש".</div>
     </section>
   </main>
 
-  <!-- ماسح بالكاميرا -->
-  <div id="scanModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
-    <div class="box">
-      <h3 id="scanTitle" style="margin:6px 0">סריקת מק״ט</h3>
-      <button id="closeScan" class="close" type="button">סגור</button>
-      <video id="preview" playsinline></video>
-      <div id="scanHint" class="muted" style="color:#ddd;margin:6px 2px 0">ברגע שהברקוד ייקלט, יוזן אוטומטית.</div>
-    </div>
-  </div>
-
   <script>
-  // ===== JS يبدأ هنا =====
-  const prices = { "111":"₪50","222":"₪75","333":"₪120","444":"₪200" };
-  const $ = id => document.getElementById(id);
-  const codeInput = $("code"), msg=$("msg"), priceRes=$("priceRes"), frame=$("renFrame");
-  $("checkBtn").onclick = checkPrice;
-  $("searchBtn").onclick = searchRenuar;
-  $("openBtn").onclick   = openInNewTab;
-  $("clearBtn").onclick  = clearAll;
-  $("scanBtn").onclick   = openScanner;
-  codeInput.addEventListener("keydown", e => { if(e.key==="Enter"){ e.preventDefault(); checkPrice(); searchRenuar(); }});
+    // جدول أسعار بسيط للتجربة
+    const prices = { "111":"₪50","222":"₪75","333":"₪120","444":"₪200" };
 
-  function safeCode(){ return (codeInput.value||"").trim().replace(/[^\dA-Za-z]/g,""); }
-  function renUrl(c){ return https://www.renuar.co.il/catalogsearch/result/?q=${encodeURIComponent(c)}; }
-  function show(type, text){ msg.className=type; msg.textContent=text; }
+    // أدوات
+    function val(){ return (document.getElementById('code').value||'').trim().replace(/[^\dA-Za-z]/g,''); }
+    function url(c){ return 'https://www.renuar.co.il/catalogsearch/result/?q='+encodeURIComponent(c); }
+    function setMsg(cls, text){ const m=document.getElementById('msg'); m.className=cls; m.textContent=text; }
 
-  function checkPrice(){
-    const c=safeCode(); if(!c){ show("err","נא להזין מק״ט"); return; }
-    if(prices[c]){ priceRes.className="ok"; priceRes.textContent=💰 ${prices[c]}; }
-    else{ priceRes.className="err"; priceRes.textContent="❌ לא נמצא בטבלה"; }
-  }
-  function searchRenuar(){
-    const c=safeCode(); if(!c){ show("err","נא להזין מק״ט"); return; }
-    frame.src=renUrl(c); frame.style.display="block"; show("muted","טוען תוצאות…");
-  }
-  function openInNewTab(){
-    const c=safeCode(); if(!c){ show("err","נא להזין מק״ט"); return; }
-    window.open(renUrl(c), "_blank", "noopener");
-  }
-  function clearAll(){
-    codeInput.value=""; frame.removeAttribute("src"); frame.style.display="none";
-    priceRes.textContent=""; show("muted","טיפ: Enter يفحص ويبحث."); codeInput.focus();
-  }
-
-  // ماسح بالكاميرا (HTTPS ضروري)
-  const scanModal=$("scanModal"), closeScan=$("closeScan"), video=$("preview"), scanHint=$("scanHint");
-  let stream=null, detector=null, timer=null;
-  async function openScanner(){
-    try{
-      scanModal.style.display="flex";
-      stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" } });
-      video.srcObject = stream; await video.play();
-      if("BarcodeDetector" in window){
-        detector = new BarcodeDetector({ formats:["ean_13","ean_8","code_128","code_39","upc_a","upc_e","itf","qr_code"] });
-        timer = setInterval(async ()=>{
-          try{
-            const codes = await detector.detect(video);
-            if(codes && codes.length){
-              const val = codes[0].rawValue || codes[0].displayValue;
-              if(val){ codeInput.value=val; closeScanner(false); checkPrice(); searchRenuar(); }
-            }
-          }catch(_){}
-        },180);
-      }else{
-        scanHint.textContent="المتصفح لا يدعم قراءة الباركود، أدخل المک״ט يدويًا.";
-      }
-    }catch(e){
-      alert("אין גישה למצלמה. الصفحة يجب أن تكون HTTPS (GitHub Pages) والسماح للكاميرا.");
-      closeScanner(true);
+    // أزرار
+    function checkPrice(){
+      const c = val();
+      const box = document.getElementById('priceRes');
+      if(!c){ setMsg('err','נא להזין מק״ט'); box.textContent=''; return; }
+      if(prices[c]){ box.className='ok'; box.textContent='💰 '+prices[c]; }
+      else{ box.className='err'; box.textContent='❌ לא נמצא בטבלה'; }
     }
-  }
-  function closeScanner(skipStop){
-    scanModal.style.display="none";
-    if(timer){ clearInterval(timer); timer=null; }
-    if(!skipStop && stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
-  }
-  closeScan.onclick=()=>closeScanner(false);
-  scanModal.addEventListener("click",(e)=>{ if(e.target===scanModal) closeScanner(false); });
+    function searchRenuar(){
+      const c = val(); if(!c){ setMsg('err','נא להזין מק״ט'); return; }
+      const f = document.getElementById('frame');
+      f.src = url(c); f.style.display='block';
+      setMsg('muted','טוען תוצאות…');
+    }
+    function openNew(){
+      const c = val(); if(!c){ setMsg('err','נא להזין מק״ט'); return; }
+      window.open(url(c), '_blank', 'noopener');
+    }
+    function clearAll(){
+      document.getElementById('code').value='';
+      document.getElementById('frame').removeAttribute('src');
+      document.getElementById('frame').style.display='none';
+      document.getElementById('priceRes').textContent='';
+      setMsg('muted','טיפ: Enter يفحص ويبحث.');
+    }
 
-  // ===== JS ينتهي هنا =====
+    // Enter = فحص + بحث
+    document.getElementById('code').addEventListener('keydown', function(e){
+      if(e.key==='Enter'){ e.preventDefault(); checkPrice(); searchRenuar(); }
+    });
   </script>
 </body>
 </html>
