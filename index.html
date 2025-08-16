@@ -22,36 +22,38 @@
     .ok{color:#118a2c;font-weight:700;margin-top:6px}
     .err{color:#c0392b;font-weight:700;margin-top:6px}
     iframe{width:100%;height:65vh;border:1px solid #eee;border-radius:10px;background:#fff;display:none;margin-top:10px}
+    .linkbox{margin-top:8px;font-size:13px}
+    .linkbox a{word-break:break-all}
   </style>
 </head>
 <body>
   <header><h1>סורק/חיפוש פריט + חיפוש באתר רנואר</h1></header>
 
   <main class="wrap">
-    <!-- شريط البحث -->
     <section class="card">
       <div class="row">
         <input id="q" type="text" placeholder="הכנס שם פריט או מק״ט">
         <button type="button" onclick="checkPrice()">בדוק מחיר</button>
-        <button type="button" class="ghost" onclick="searchRenuar()">חפש ברנואר</button>
-        <button type="button" class="ghost" onclick="openRenuar()">פתח בטאב חדש</button>
+        <button type="button" class="ghost" onclick="searchInFrame()">חפש ברנואר (במסגרת)</button>
+        <button type="button" class="ghost" onclick="openNew()">פתח בטאב חדש</button>
+        <button type="button" class="ghost" onclick="openSame()">פתח באותו טאב</button>
         <button type="button" class="ghost" onclick="clearAll()">נקה</button>
       </div>
-      <div id="msg" class="muted">טיפ: לחיצה על Enter تفحص السعر وتبحث في רנואר.</div>
+      <div id="msg" class="muted">טיפ: Enter يفحص السعر ويجهّز رابط البحث.</div>
       <div id="priceBox"></div>
+      <div id="debugLink" class="linkbox muted"></div>
     </section>
 
-    <!-- نتائج רנואר داخل الصفحة -->
     <section class="card">
       <strong>תוצאות באתר רנואר (במסגרת):</strong>
       <iframe id="renFrame" title="תוצאות חיפוש רנואר"></iframe>
-      <div class="muted">אם לא מופיע בתוך המסגרת (חסימת IFRAME) استخدم "פתח בטאב חדש".</div>
+      <div class="muted">אם לא מופיע בתוך המסגרת (חסימת IFRAME) استخدم "פתח בטאב جديد" أو "نفس التبويب".</div>
     </section>
 
-    <!-- جدول أسعار نموذجي يمكنك تعديله بحرية -->
     <section class="card">
-      <strong>טבלת מחירים לדוגמה (חיפוש לפי שם או מק״ט):</strong>
+      <strong>טבלת מחירים מקומית (عدّلها لما يناسب منتجاتك):</strong>
       <pre class="muted" style="white-space:pre-wrap;margin-top:8px">
+مثال:
 SKU: 111   | שם: חולצת בייסיק | ₪50
 SKU: 222   | שם: מכנס ג׳ינס   | ₪75
 SKU: 333   | שם: שמלת ערב     | ₪120
@@ -61,40 +63,50 @@ SKU: 444   | שם: מעיל חורף    | ₪200
   </main>
 
   <script>
-    // --- كتالوج محلي بسيط (عدّله كما تريد) ---
-    // ابقِ الاسم كما في רנואר ليسهل عليك المطابقة بالنص
+    // === جدول أسعار محلي: عدّله وأضف كل ال-SKU الحقيقيين وأسعارهم ===
     const CATALOG = [
       { sku: "111", name: "חולצת בייסיק", price: "₪50"  },
       { sku: "222", name: "מכנס ג׳ינס",   price: "₪75"  },
       { sku: "333", name: "שמלת ערב",     price: "₪120" },
       { sku: "444", name: "מעיל חורף",    price: "₪200" }
+      // أضف هنا: { sku: "123456", name: "اسم רנואר", price: "₪XXX" },
     ];
 
-    // أدوات واجهة
     const $ = id => document.getElementById(id);
-    const input = $("q"), frame = $("renFrame"), msg = $("msg"), priceBox = $("priceBox");
+    const input = $("q"), frame = $("renFrame"), msg = $("msg"), priceBox = $("priceBox"), dbg = $("debugLink");
 
-    function norm(s){ return (s||"").toString().trim(); }
-    function safeQuery(){ return norm(input.value).replace(/[^\dA-Za-z\u0590-\u05FF\s'״״"׳-]/g,""); } // ارقام/حروف/عبرية ومسافات
-    function renuarUrl(q){ return "https://www.renuar.co.il/catalogsearch/result/?q=" + encodeURIComponent(q); }
+    // إزالة تشكيل عبري (ניקוד) ومسافات شاذة
+    function stripHebrewNiqqud(s){
+      return s.replace(/[\u0591-\u05C7]/g,'');
+    }
+    function safeQuery(){
+      let s = (input.value || '').trim();
+      s = stripHebrewNiqqud(s);
+      s = s.replace(/\s+/g,' ').trim();             // مسافة واحدة
+      s = s.replace(/[^\dA-Za-z\u0590-\u05FF\s\-]/g,''); // أرقام/حروف/عبري/مسافة/شرطة
+      return s;
+    }
+    function renuarUrl(q){
+      return "https://www.renuar.co.il/catalogsearch/result/?q=" + encodeURIComponent(q);
+    }
     function setMsg(cls,text){ msg.className = cls; msg.textContent = text; }
+    function showDebug(url){
+      dbg.innerHTML = url ? ('🔗 رابط البحث: <a href="'+url+'" target="_blank" rel="noopener">'+url+'</a>') : '';
+    }
 
-    // البحث في الكتالوج المحلي: يطابق بالـ SKU (تطابق تام) أو بالاسم (يحتوي النص)
+    // مطابقة بالسكو/بالاسم محليًا
     function localFind(q){
-      const s = norm(q);
+      const s = q.trim();
       if(!s) return null;
-      // أولوية: إذا كله أرقام → اعتبره SKU
-      if(/^\d+$/.test(s)){
-        return CATALOG.find(p => p.sku === s) || null;
-      }
-      // غير ذلك نبحث بالاسم باحتواء النص (غير حساس لحالة الأحرف)
+      if(/^\d+$/.test(s)) return CATALOG.find(p => p.sku === s) || null;  // كلّه أرقام → SKU
       const low = s.toLowerCase();
       return CATALOG.find(p => p.name.toLowerCase().includes(low)) || null;
     }
 
-    // زر: فحص السعر داخل موقعي
+    // السعر المحلي
     function checkPrice(){
       const q = safeQuery();
+      showDebug( renuarUrl(q) );
       if(!q){ setMsg("err","נא להזין שם פריט או מק״ט"); priceBox.textContent=""; return; }
       const item = localFind(q);
       if(item){
@@ -103,40 +115,53 @@ SKU: 444   | שם: מעיל חורף    | ₪200
         setMsg("muted","נמצא במחירון המקומי.");
       }else{
         priceBox.className="err";
-        priceBox.textContent = "❌ לא נמצא במחירון המקומי";
-        setMsg("muted","ניתן עדיין לחפש באתר רנואר.");
+        priceBox.textContent = "ℹ לא נמצא במחירון המקומי — أضفه لـ CATALOG إن أردت عرض سعره هنا.";
+        setMsg("muted","אפשר עדיין לחפש באתר רנואר בקישורים أعلاه.");
       }
     }
 
-    // زر: البحث داخل رנואר داخل الصفحة
-    function searchRenuar(){
+    // البحث داخل إطار (قد يُحجب)
+    function searchInFrame(){
       const q = safeQuery();
+      const url = renuarUrl(q);
+      showDebug(url);
       if(!q){ setMsg("err","נא להזין שם פריט או מק״ט"); return; }
-      frame.src = renuarUrl(q);
+      frame.src = url;
       frame.style.display = "block";
-      setMsg("muted","טוען תוצאות מרנואר…");
+      setMsg("muted","טוען תוצאות מרנואר… (إن لم تظهر، افتح في تبويب)");
     }
 
-    // زر: فتح في تبويب جديد
-    function openRenuar(){
+    // فتح في تبويب جديد
+    function openNew(){
       const q = safeQuery();
+      const url = renuarUrl(q);
+      showDebug(url);
       if(!q){ setMsg("err","נא להזין שם פריט או מק״ט"); return; }
-      window.open(renuarUrl(q), "_blank", "noopener");
+      window.open(url, "_blank", "noopener");
     }
 
-    // زر: مسح الكل
+    // فتح في نفس التبويب (أقوى ضد إعادة التوجيه للـHome)
+    function openSame(){
+      const q = safeQuery();
+      const url = renuarUrl(q);
+      showDebug(url);
+      if(!q){ setMsg("err","נא להזין שם פריט או מק״ט"); return; }
+      window.location.href = url;
+    }
+
     function clearAll(){
       input.value = "";
       frame.removeAttribute("src");
       frame.style.display = "none";
       priceBox.textContent = "";
-      setMsg("muted","טיפ: לחיצה על Enter تفحص السعر وتبحث.");
+      showDebug("");
+      setMsg("muted","טיפ: Enter يفحص السعر ويجهّز رابط البحث.");
       input.focus();
     }
 
-    // Enter = فحص + بحث
+    // Enter: يفحص + يجهّز الرابط (ولا يغيّر الصفحة)
     input.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter"){ e.preventDefault(); checkPrice(); searchRenuar(); }
+      if(e.key === "Enter"){ e.preventDefault(); checkPrice(); }
     });
   </script>
 </body>
